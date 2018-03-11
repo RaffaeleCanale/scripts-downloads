@@ -1,0 +1,17 @@
+__downloads()
+{
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    case "$prev" in
+        "downloads" )
+            COMPREPLY=( $(compgen -W "`downloads --autocomplete`" -- ${cur}) )
+            ;;
+        * )
+            COMPREPLY=( $(compgen -W "`downloads --autocomplete "${COMP_WORDS[@]}"`" -- ${cur}) )
+            ;;
+    esac
+}
+
+complete -F __downloads downloads

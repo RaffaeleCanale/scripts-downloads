@@ -1,0 +1,22 @@
+#!/bin/bash
+function modulePrintHelp() {
+    cat << EOF
+        Move downloaded files to the current directory
+EOF
+}
+
+function moduleRun() {
+    forEachFile move
+}
+
+function move() {
+    # xdg-open "$1"
+    if [[ "$1" == *.crdownload ]]; then
+        warn "File `basename "$1"` might still be downloading."
+        if ! inputYesNo "Move anyways"; then
+            return 0
+        fi
+    fi
+
+    mv "$1" "$PWD"
+}

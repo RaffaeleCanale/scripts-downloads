@@ -1,0 +1,23 @@
+
+#!/bin/bash
+function modulePrintHelp() {
+    cat << EOF
+        Open downloaded files
+EOF
+}
+
+function moduleLoadOptions() {
+    getOpt "-(e|-editor)" editor 1 "xdg-open"
+}
+
+function autocomplete() {
+    ls "$TARGET_DIRECTORY"
+}
+
+function moduleRun() {
+    forEachFile open
+}
+
+function open() {
+    $editor "$1"
+}

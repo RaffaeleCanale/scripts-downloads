@@ -1,0 +1,21 @@
+#!/bin/bash
+function modulePrintHelp() {
+    cat << EOF
+        Send downloaded files to the trash
+EOF
+}
+
+function moduleLoadOptions() {
+    getOpt "-(t|-trash-cli)" trash_cli 1 "gvfs-trash"
+}
+
+function moduleRun() {
+    forEachFile copy
+}
+
+function copy() {
+    if ! which $trash_cli > /dev/null; then
+        stop "$trash_cli is not installed, please provide a 'send-to-trash' command with --trash-cli <cmd>"
+    fi
+    $trash_cli "$1"
+}

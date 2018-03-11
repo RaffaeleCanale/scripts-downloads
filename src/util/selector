@@ -1,0 +1,52 @@
+#!/bin/bash
+function _display() {
+    echo -en "\r\033[K`display "$1" "$2"`"
+}
+
+function selectFromArray() {
+    local char=
+    local rest=
+    local histindex=0
+
+    local action="$1"
+    shift
+
+    local array=("$@")
+
+    _display "${array[$histindex]}" "$histindex"
+
+    # Read one character at a time
+    while IFS= read -r -n 1 -s char; do
+        if [ "$char" == $'\x1b' ]; then
+            # \x1b is the start of an escape sequence
+            # Get the rest of the escape sequence (3 characters total)
+            while IFS= read -r -t 0.01 -n 2 -s rest; do
+                char+="$rest"
+                break
+            done
+        fi
+        if [ "$char" == $'\x1b[A' ]; then
+            # Up
+            if [ $histindex -gt 0 ]; then
+                histindex=$((histindex-1))
+            fi
+
+            _display "${array[$histindex]}" "$histindex"
+
+        elif [ "$char" == $'\x1b[B' ]; then
+            # Down
+            if [ $((histindex+1)) -lt ${#array[@]} ]; then
+                histindex=$((histindex+1))
+            fi
+
+            _display "${array[$histindex]}" "$histindex"
+        elif [ -z "$char" ]; then # Newline
+            echo
+            $action "${array[$histindex]}" "$histindex" "action" && return 0
+
+        elif [ "$char" == $'\x1b' ]; then # Escape only
+            echo
+            return 1
+        fi
+    done
+}

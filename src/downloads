@@ -1,0 +1,124 @@
+#!/bin/bash
+function declareConstants() {
+    $1 TARGET_DIRECTORY "__DOWNLOADS_DIR__"
+}
+
+function printHelp() {
+    cat << EOF
+
+    Manage download files in $TARGET_DIRECTORY
+EOF
+    for module in "__ROOT__/modules/"*; do
+        local moduleName=$(basename "$module")
+
+        echo
+        echo "    ${PROGNAME} `green $moduleName`"
+
+        source "$module"
+        if type modulePrintHelp &>/dev/null; then
+            modulePrintHelp
+        fi
+    done
+}
+
+function loadOptions() {
+    unusedBehaviour="IGNORE"
+    getOpt "--autocomplete" autocomplete
+    getOpt "-[0-9]+" count0 OPT "null"
+    getOpt "-(i|-interactive)" interactiveCount
+}
+
+function autocomplete() {
+    if [ $# -gt 1 ]; then
+        # Targets a module's autocomplete
+        local module="__ROOT__/modules/$2"
+        source "$module"
+        if type autocomplete &>/dev/null; then
+            shift
+            shift
+            autocomplete "$@"
+        fi
+    else
+        ls "__ROOT__/modules"
+    fi
+}
+
+function display() {
+    local name=`basename "$1"`
+
+    local sizeV=$(stat -c%s "$1")
+    local sizeP=`printSize $sizeV`
+    padLeft sizeP 9
+
+    local dateV=$(stat -c %Y "$1")
+    local dateP=`date -d @"$dateV" +"%d/%m/%Y %T"`
+
+    local index="$(($2+1))"
+    padLeft index 2
+
+    if [ $sizeV -gt 1073741824 ]; then
+        sizeColor=red
+    elif [ $sizeV -gt 536870912 ]; then
+        sizeColor=yellow
+    elif [ $sizeV -gt 1048576 ]; then
+        sizeColor=lightGrey
+    else
+        sizeColor=grey
+    fi
+
+    changeIFS
+    echo -e "`cyan "$index)"` $dateP `$sizeColor $sizeP` $(bold `blue $name`)"
+    resetIFS
+}
+
+function forEachFile() {
+    if [ "$count0" == "null" ]; then
+        count="${2:-1}"
+    else
+        count="${count0:1}"
+    fi
+
+    changeIFS
+    local array=(`ls -t -d "${TARGET_DIRECTORY}/"*`)
+    resetIFS
+
+    if [ $count -eq 0 ] || $interactiveCount; then
+        selectFromArray $1 "${array[@]}"
+    else
+        for (( i = 0; i < $count && i < ${#array[@]}; i++ )); do
+            $1 "${array[$i]}" $i
+        done
+    fi
+}
+
+function run () {
+    if $autocomplete; then
+        autocomplete "$@"
+        return 0
+    fi
+
+    hasMoreArgs $#
+
+    local module="__ROOT__/modules/$1"
+
+    if [ ! -f "$module" ]; then
+        stop "Unknown mode: $1"
+    fi
+
+
+    source "$module"
+    shift
+    ARGUMENTS=("$@")
+    if type moduleLoadOptions &>/dev/null; then
+        moduleLoadOptions
+    fi
+
+    if [ $unusedBehaviour != "IGNORE" ]; then
+        checkUnused
+    fi
+
+    moduleRun "${ARGUMENTS[@]:+${ARGUMENTS[@]}}"
+}
+
+source "__ROOT__/util/selector"
+source "__STARTER__@v2"

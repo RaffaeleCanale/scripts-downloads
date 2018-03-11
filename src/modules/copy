@@ -1,0 +1,14 @@
+#!/bin/bash
+function modulePrintHelp() {
+    cat << EOF
+        Copy downloaded files to the current directory
+EOF
+}
+
+function moduleRun() {
+    forEachFile copy
+}
+
+function copy() {
+    cp -r "$1" "$PWD"
+}

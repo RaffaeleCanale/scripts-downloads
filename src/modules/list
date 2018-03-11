@@ -1,0 +1,10 @@
+#!/bin/bash
+function modulePrintHelp() {
+    cat << EOF
+        List downloaded files
+EOF
+}
+
+function moduleRun() {
+    forEachFile display 10
+}
