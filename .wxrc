@@ -1,9 +1,6 @@
 {
     "main": "downloads",
-    "files": [
-        {
-            "name": "scripts-downloads",
-            "output": "config.properties"
-        }
+    "config": [
+        "config.properties"
     ]
 }
